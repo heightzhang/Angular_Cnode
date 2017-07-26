@@ -273,7 +273,7 @@
             templateUrl: "directive/login/xlogin.html",
             link: function(scope, ele, arrt) {
                 //初始化 默认用户名
-                scope.msg = "您的assken码"
+                scope.msg = ""
                 scope.cha_show = true;
                 //初始化高亮
                 $rootScope.tab = 4
