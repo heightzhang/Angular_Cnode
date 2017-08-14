@@ -227,18 +227,121 @@
 
 
     //-----------------------三 \ 详情页面-------
-    directives.directive('xdetail', ['$state', '$http', function($state, $http) {
+    directives.directive('xdetail', ['$state', '$http', '$location', function($state, $http, $location) {
         return {
             templateUrl: "directive/xdetail.html",
             link: function(scope, ele, attr) {
                 scope.id = $state.params.id
+                scope.init = function(){
+                    $http({
+                            method: "get",
+                            url: "https://cnodejs.org/api/v1/topic/" + scope.id
+                        }).then(function(data) {
+                            scope.detail = data.data.data;
+                            scope.html = scope.detail.content;
+                            //主题收藏
+                            scope.top = scope.detail.tab
+                            //初始化评论信息列表
+                            scope.reply = data.data.data.replies
+                        }) 
+                }
+                scope.init();
+                    //默认红心状态;
                 $http({
-                    method: "get",
-                    url: "https://cnodejs.org/api/v1/topic/" + scope.id
+                    method: 'post',
+                    url: 'https://cnodejs.org/api/v1/topic_collect/collect',
+                    data: {
+                        accesstoken: store.getState().accesstoken,
+                        topic_id: $location.$$url.split('/')[2]
+                    },
+                    headers: {
+                        'Content-Type': "application/json;charset=UTF-8"
+                    }
                 }).then(function(data) {
-                    scope.detail = data.data.data;
-                    scope.html = scope.detail.content;
-                })
+                    console.log(data.data.success)
+                    if (data.data.success) {
+                        scope.state = false
+                    } else {
+                        scope.state = true
+                    }
+                }, function(err) {
+                    console.log(err.data.error_msg) //打印错误信息
+
+                });
+
+                //更改收藏红心选中的状态 -----------------
+                scope.change = function() {
+                    if (scope.state) {
+                        scope.state = false
+                        $http({
+                            method: 'post',
+                            url: 'https://cnodejs.org/api/v1/topic_collect/de_collect',
+                            data: {
+                                accesstoken: store.getState().accesstoken,
+                                topic_id: $location.$$url.split('/')[2]
+                            },
+                            headers: {
+                                'Content-Type': "application/json;charset=UTF-8"
+                            }
+                        }).then(function(data) {
+                            console.log(data.data)
+                        }, function(err) {
+                            console.log(err.data.error_msg) //打印错误信息
+
+                        });
+
+                    } else {
+                        scope.state = true
+                        console.log(store.getState().accesstoken)
+                        $http({
+                            method: 'post',
+                            url: 'https://cnodejs.org/api/v1/topic_collect/collect',
+                            data: {
+                                accesstoken: store.getState().accesstoken,
+                                topic_id: $location.$$url.split('/')[2]
+                            },
+                            headers: {
+                                'Content-Type': "application/json;charset=UTF-8"
+                            }
+                        }).then(function(data) {
+                            console.log(data.data)
+                        }, function(err) {
+                            console.log(err.data.error_msg) //打印错误信息
+
+                        });
+
+                    }
+
+                }
+
+                //新增评论功能;
+                scope.value = '说点什么吧'
+                scope.comment = function() {
+                    let topic_id = $location.$$url.split('/')[2];
+
+                    $http({
+                        method: 'post',
+                        url: 'https://cnodejs.org/api/v1/topic/'+topic_id+'/replies',
+                        data: {
+                            accesstoken: store.getState().accesstoken,
+                            content:scope.value
+                        },
+                        headers: {
+                            'Content-Type': "application/json;charset=UTF-8"
+                        }
+                    }).then(function(data) {
+                            scope.init();
+                    }, function(err) {
+                        console.log(err.data.error_msg) //打印错误信息
+
+                    });
+                }
+
+                //评论的字体长度设置;
+                scope.length = 0;
+                scope.len =function(value){
+                    scope.length = value.length
+                }
 
             }
         }
@@ -258,11 +361,33 @@
 
 
     //----------------------四 \ -发布帖子页面--------------------
-    directives.directive('xcreate', [function() {
+    directives.directive('xcreate', ['$http', function($http) {
         return {
             templateUrl: "directive/create/xcreate.html",
             link: function(scope, ele, attr) {
+                scope.ak = "ca91d715-2577-4253-885b-4665939c47c5";
 
+                scope.publish = function() {
+                    $http({
+                        method: 'post',
+                        url: 'https://cnodejs.org/api/v1/topics ',
+                        data: {
+                            accesstoken: scope.ak,
+                            title: scope.title,
+                            tab: 'dev',
+                            content: scope.content
+                        },
+                        headers: {
+                            'Content-Type': "application/json;charset=UTF-8"
+                        }
+                    }).then(function(data) {
+                        console.log('成功')
+                        alert('成功')
+                    }, function(err) {
+                        console.log(err.data.error_msg) //打印错误信息
+                        alert(err.data.error_msg)
+                    });
+                }
             }
         }
     }]);
@@ -273,7 +398,7 @@
             templateUrl: "directive/login/xlogin.html",
             link: function(scope, ele, arrt) {
                 //初始化 默认用户名
-                scope.msg = ""
+                scope.msg = "ca91d715-2577-4253-885b-4665939c47c5"
                 scope.cha_show = true;
                 //初始化高亮
                 $rootScope.tab = 4
@@ -354,26 +479,20 @@
                     scope.email = scope.data.githubUsername + "@github.com"
                     scope.create_time = scope.data.create_at;
                     scope.score = scope.data.score;
-                    // console.log(scope.data)
-
-                    //列表样式 xmine-list;
-                    scope.avatar_img = scope.data.recent_replies[0].author.avatar_url;
-                    scope.author_name = scope.data.recent_replies[0].author.loginname;
-                    scope.title = scope.data.recent_replies[0].title;
-                    scope.last_time = scope.data.recent_replies[0].last_reply_at
-
-                    scope.id = scope.data.recent_replies[0].id
+                    //列表样式 xmine-list; 最近回复
+                    scope.replay = data.data.data.recent_replies
                 }, function(err) {
                     console.log(err);
                 });
-                scope.info = function() {
+                scope.info = function(id) {
+                    scope.id = id
                     $window.location.href = "#!/detail/" + scope.id
                 }
             }
         }
     }]);
 
-    directives.directive("xminelist", ["$rootScope", "$window","$http", function($rootScope, $window,$http) {
+    directives.directive("xminelist", ["$rootScope", "$window", "$http", function($rootScope, $window, $http) {
         return {
             templateUrl: "directive/mine/xmine_list.html",
             link: function(scope, ele, attr) {
@@ -397,11 +516,22 @@
                             method: "GET",
                             url: "https://cnodejs.org/api/v1/topic_collect/" + scope.loginname
                         }).then(function(data) {
-                           scope.data = data.data.data
-                           scope.info =function(id){
+                            scope.data = data.data.data
+                            scope.info = function(id) {
                                 $window.location.href = "#!/detail/" + id
-                           }
-                           console.log(scope.data)
+                            }
+                            console.log(scope.data)
+                        }, function(err) {
+                            console.log(err);
+                        });
+                    }
+                    //最新发布
+                    if ($rootScope.show === 1) {
+                        $http({
+                            method: "GET",
+                            url: "https://cnodejs.org/api/v1/user/" + scope.loginname
+                        }).then(function(data) {
+                            scope.publish = data.data.data.recent_topics
                         }, function(err) {
                             console.log(err);
                         });

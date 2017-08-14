@@ -1,7 +1,7 @@
 <div class="article">
     <div class="weui_cells_title">
         <span>新话题</span>
-        <button class="weui_btn_primary" style="position: absolute; right: 14px; font-size: 12px;">
+        <button class="weui_btn_primary" style="position: absolute; right: 14px; font-size: 12px;" ng-click = "publish()">
             发布
         </button>
     </div>
@@ -12,19 +12,18 @@
         <div class="weui_cell_bd weui_cell_primary">
             <select class="weui_select">
                 <!---->
-                <option value="selected">请选择主题分类</option>
+                <option value="selected">客户端测试</option>
                 <option value="share">分享</option>
                 <option value="ask">问答</option>
                 <option value="job">招聘</option>
-                <option value="dev">测试</option>dev
             </select>
         </div>
     </div>
     <div class="title">
-        <input ype="text" placeholder="标题，字数10字以上" class="weui_input">
+        <input placeholder="标题，字数10字以上" class="weui_input" ng-model = "title">
     </div>
     <dic class="content">
-        <textarea placeholder="说点什么吧..." name="description" rows="3" cols="30" class="weui_textarea" style="height: 469px;"></textarea>
+        <textarea placeholder="说点什么吧..." name="description" rows="3" cols="30" class="weui_textarea" style="height: 469px;" ng-model = "content"></textarea>
     </dic>
 </div>
 <style>
